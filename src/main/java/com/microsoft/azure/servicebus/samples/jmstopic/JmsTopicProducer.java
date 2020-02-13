@@ -125,7 +125,7 @@ public class JmsTopicProducer {
 
             // Send messages
             for (int i = 0; i < totalSend; i++) {
-                Message message1 = new Message();
+                final Message message1 = new Message();
                 message1.id = "aaaa " + random.nextInt();
                 message1.type = "bbbb" + random.nextInt();
                 final Payload payload = new Payload();
