@@ -8,6 +8,7 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson-databind-version>2.9.8</jackson-databind-version>
     </properties>
     <build>
         <plugins>
@@ -60,6 +61,16 @@
             <groupId>org.apache.qpid</groupId>
             <artifactId>proton-j</artifactId>
             <version>[0.23.0,]</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson-databind-version}</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>

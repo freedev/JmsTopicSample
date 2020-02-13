@@ -3,6 +3,9 @@
 
 package com.microsoft.azure.servicebus.samples.jmstopic;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
@@ -23,6 +26,11 @@ import java.util.function.Function;
  */
 public class JmsTopicConsumer {
 
+    private static ObjectMapper mapper = new ObjectMapper();
+    static {
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
     // number of messages to send
     private static int totalSend = 10;
     // log4j logger
@@ -73,6 +81,8 @@ public class JmsTopicConsumer {
         // Set callback listener. Gets called for each received message.
         consumer.setMessageListener(message -> {
             try {
+                final Message body = message.getBody(Message.class);
+                System.out.println(body);
                 System.out.printf("Received message %d with sq#: %s\n",
                         totalReceived.incrementAndGet(),  // increments the counter
                         message.getJMSMessageID());

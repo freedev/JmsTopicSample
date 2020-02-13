@@ -3,6 +3,9 @@
 
 package com.microsoft.azure.servicebus.samples.jmstopic;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
@@ -21,6 +24,11 @@ import java.util.function.Function;
  */
 public class JmsTopicProducer {
 
+    private static ObjectMapper mapper = new ObjectMapper();
+    static {
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
     // number of messages to send
     private static int totalSend = 10;
     // log4j logger
@@ -63,9 +71,11 @@ public class JmsTopicProducer {
 
             // Send messages
             for (int i = 0; i < totalSend; i++) {
-                BytesMessage message = session.createBytesMessage();
-                message.writeBytes(String.valueOf(i).getBytes());
-                producer.send(message);
+                Message message1 = new Message();
+                message1.id = "aaaa";
+                message1.type = "bbbb";
+                final ObjectMessage objectMessage = session.createObjectMessage(message1);
+                producer.send(objectMessage);
                 System.out.printf("Sent message %d.\n", i + 1);
             }
 
