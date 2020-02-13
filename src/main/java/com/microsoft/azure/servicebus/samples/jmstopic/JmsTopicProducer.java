@@ -14,6 +14,7 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import java.util.Hashtable;
+import java.util.Random;
 import java.util.function.Function;
 
 /**
@@ -24,68 +25,16 @@ import java.util.function.Function;
  */
 public class JmsTopicProducer {
 
+    static final String SB_SAMPLES_CONNECTIONSTRING = "SB_SAMPLES_CONNECTIONSTRING";
     private static ObjectMapper mapper = new ObjectMapper();
-    static {
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    }
     // number of messages to send
     private static int totalSend = 10;
     // log4j logger
     private static Logger logger = Logger.getRootLogger();
 
-    public void run(String connectionString) throws Exception {
-
-
-        // The connection string builder is the only part of the azure-servicebus SDK library 
-        // we use in this JMS sample and for the purpose of robustly parsing the Service Bus 
-        // connection string. 
-        ConnectionStringBuilder csb = new ConnectionStringBuilder(connectionString);
-
-        // set up the JNDI context 
-        Hashtable<String, String> hashtable = new Hashtable<>();
-        hashtable.put("connectionfactory.SBCF", "amqps://" + csb.getEndpoint().getHost() + "?amqp.idleTimeout=120000&amqp.traceFrames=true");
-        hashtable.put("topic.TOPIC", "BasicTopic");
-        hashtable.put("queue.SUBSCRIPTION1", "BasicTopic/Subscriptions/Subscription1");
-        hashtable.put("queue.SUBSCRIPTION2", "BasicTopic/Subscriptions/Subscription2");
-        hashtable.put("queue.SUBSCRIPTION3", "BasicTopic/Subscriptions/Subscription3");
-        hashtable.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
-        Context context = new InitialContext(hashtable);
-
-        ConnectionFactory cf = (ConnectionFactory) context.lookup("SBCF");
-
-        // Look up the topic
-        Destination topic = (Destination) context.lookup("TOPIC");
-
-        // we create a scope here so we can use the same set of local variables cleanly 
-        // again to show the receive side seperately with minimal clutter
-        {
-            // Create Connection
-            Connection connection = cf.createConnection(csb.getSasKeyName(), csb.getSasKey());
-            connection.start();
-            // Create Session, no transaction, client ack
-            Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-
-            // Create producer
-            MessageProducer producer = session.createProducer(topic);
-
-            // Send messages
-            for (int i = 0; i < totalSend; i++) {
-                Message message1 = new Message();
-                message1.id = "aaaa";
-                message1.type = "bbbb";
-                final ObjectMessage objectMessage = session.createObjectMessage(message1);
-                producer.send(objectMessage);
-                System.out.printf("Sent message %d.\n", i + 1);
-            }
-
-            producer.close();
-            session.close();
-            connection.stop();
-            connection.close();
-        }
-
-        System.out.printf("Closing queue client.\n");
+    static {
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
     public static void main(String[] args) {
@@ -101,8 +50,6 @@ public class JmsTopicProducer {
             }
         }));
     }
-
-    static final String SB_SAMPLES_CONNECTIONSTRING = "SB_SAMPLES_CONNECTIONSTRING";
 
     public static int runApp(String[] args, Function<String, Integer> run) {
         try {
@@ -134,5 +81,63 @@ public class JmsTopicProducer {
             System.out.printf("%s", e.toString());
             return 3;
         }
+    }
+
+    public void run(String connectionString) throws Exception {
+
+
+        // The connection string builder is the only part of the azure-servicebus SDK library
+        // we use in this JMS sample and for the purpose of robustly parsing the Service Bus
+        // connection string.
+        ConnectionStringBuilder csb = new ConnectionStringBuilder(connectionString);
+
+        // set up the JNDI context
+        Hashtable<String, String> hashtable = new Hashtable<>();
+        hashtable.put("connectionfactory.SBCF", "amqps://" + csb.getEndpoint()
+                                                                .getHost() + "?amqp.idleTimeout=120000&amqp.traceFrames=true");
+        hashtable.put("topic.TOPIC", "BasicTopic");
+        hashtable.put("queue.SUBSCRIPTION1", "BasicTopic/Subscriptions/Subscription1");
+        hashtable.put("queue.SUBSCRIPTION2", "BasicTopic/Subscriptions/Subscription2");
+        hashtable.put("queue.SUBSCRIPTION3", "BasicTopic/Subscriptions/Subscription3");
+        hashtable.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
+        Context context = new InitialContext(hashtable);
+
+        ConnectionFactory cf = (ConnectionFactory) context.lookup("SBCF");
+
+        // Look up the topic
+        Destination topic = (Destination) context.lookup("TOPIC");
+
+        // we create a scope here so we can use the same set of local variables cleanly
+        // again to show the receive side seperately with minimal clutter
+        {
+            // Create Connection
+            Connection connection = cf.createConnection(csb.getSasKeyName(), csb.getSasKey());
+            connection.start();
+            // Create Session, no transaction, client ack
+            Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+
+            // Create producer
+            MessageProducer producer = session.createProducer(topic);
+
+            final Random random = new Random();
+
+            // Send messages
+            for (int i = 0; i < totalSend; i++) {
+                Message message1 = new Message();
+                message1.id = "aaaa " + random.nextInt();
+                message1.type = "bbbb" + random.nextInt();
+                System.out.println(message1);
+                final ObjectMessage objectMessage = session.createObjectMessage(message1);
+                producer.send(objectMessage);
+                System.out.printf("Sent message %d.\n", i + 1);
+            }
+
+            producer.close();
+            session.close();
+            connection.stop();
+            connection.close();
+        }
+
+        System.out.printf("Closing queue client.\n");
     }
 }
