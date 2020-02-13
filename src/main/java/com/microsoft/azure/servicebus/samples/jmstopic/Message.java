@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 import java.time.LocalDateTime;
 
-public class Message extends MessageBase {
+public class Message {
     public String type;
     public String id;
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
