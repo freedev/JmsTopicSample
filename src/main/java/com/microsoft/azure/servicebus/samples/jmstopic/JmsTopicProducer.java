@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.function.Function;
@@ -126,6 +128,17 @@ public class JmsTopicProducer {
                 Message message1 = new Message();
                 message1.id = "aaaa " + random.nextInt();
                 message1.type = "bbbb" + random.nextInt();
+                final Payload payload = new Payload();
+                payload.action = "ccc";
+                payload.type = "ddd";
+                payload.params = new HashMap<>();
+                payload.params.put("one", 1);
+                payload.params.put("two", "2");
+                payload.params.put("three", 3.1);
+                payload.params.put("four", Boolean.TRUE);
+                payload.params.put("fifth", LocalDateTime.now());
+                message1.payload = payload;
+
                 System.out.println(message1);
                 final ObjectMessage objectMessage = session.createObjectMessage(message1);
                 producer.send(objectMessage);
